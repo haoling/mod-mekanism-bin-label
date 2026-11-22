@@ -14,9 +14,13 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.items.IItemHandler;
 
@@ -26,7 +30,9 @@ public class BinLabelMod {
     public static final String MOD_ID = "binlabel";
     private static final ResourceLocation LAYER = ResourceLocation.fromNamespaceAndPath(MOD_ID, "bin_label");
 
-    public BinLabelMod(IEventBus modBus) {
+    public BinLabelMod(IEventBus modBus, ModContainer container) {
+        container.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
+        container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         modBus.addListener(RegisterGuiLayersEvent.class,
                 e -> e.registerAbove(VanillaGuiLayers.CROSSHAIR, LAYER, BinLabelMod::render));
     }
@@ -38,7 +44,7 @@ public class BinLabelMod {
 
     private static void render(GuiGraphics g, DeltaTracker delta) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.options.hideGui || mc.level == null || mc.screen != null) return;
+        if (!Config.SHOW_LABEL.get() || mc.options.hideGui || mc.level == null || mc.screen != null) return;
         if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) return;
         Level level = mc.level;
         BlockPos pos = hit.getBlockPos();
